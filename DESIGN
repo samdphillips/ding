@@ -1,0 +1,65 @@
+
+a nothing special language
+java/C# ish
+
+statically typed objects etc.
+generics (duh)
+
+local type inference
+lambdas
+
+threading and such like racket (CML FTW)
+
+object properties via getters/setters (I think C# has something like this)
+ - kinda like reader and writer attributes in ruby
+
+class "extension" via traits
+ - perhaps also adding of interfaces after the fact
+ (traits could be funny and break stuff...)
+
+(or maybe some other extension facility, a module system could work nicer)
+
+----
+
+I have an idea for Union Classes, essentially like
+
+class A { ... }
+class B { ... }
+
+union class C (A, B) { ... }
+- things that are C cannot be instantiated, must be A or B
+- things that are C can only do operations that are defined in both A and B or
+  are defined in body of C
+- in the body of C operations can be defined for all members or for specific
+  ones (to implement missing functionality)
+
+----
+
+method overloading
+
+----
+
+syntactic sugar for passing lambdas:
+  do func(x ...) { blah ... }
+
+syntactic sugar for 'for' loops:
+
+  for x in y { blah  ... }
+   ->
+  var t = y.iterator();
+  while not t.isDone() {
+      var x = t.next();
+      blah ...
+  }
+
+backtick syntax for infix ops (with fixed precendence)
+smalltalk style "binary selector" rules for symbol based infix ops (need some
+good rules for precedence...)
+
+(might not use these if we have a macro system)
+
+----
+
+Actually for some of the syntax stuff it could be cool to build a system like Honu.
+
+
