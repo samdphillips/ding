@@ -1,8 +1,9 @@
 
 class BufferedText:
-    def __init__(self, io):
+    def __init__(self, io, bufsize=256):
         self.io = io
         self.bufpos = 0
+        self.bufsize = bufsize
         self.buffers = []
 
     def chars_avail(self):
@@ -10,7 +11,7 @@ class BufferedText:
 
     def fill(self, n):
         while n > self.chars_avail():
-            buf = self.io.read(256)
+            buf = self.io.read(self.bufsize)
             self.buffers.append(buf)
             if buf == '':
                 break
