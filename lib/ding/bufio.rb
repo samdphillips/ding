@@ -12,7 +12,7 @@ module Ding
         end
 
         def init_buffer_empty?
-            @bufpos > (@buffers[0].size - 1)
+            @buffers.size > 0 and @bufpos > (@buffers[0].size - 1)
         end
 
         def fill(count)
@@ -42,8 +42,8 @@ module Ding
                 else
                     len = buf.size - pos
                     s << buf[pos,len]
-                    n -= len
-                    p = 0 
+                    count -= len
+                    pos = 0 
                 end
             end
             s

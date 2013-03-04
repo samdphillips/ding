@@ -4,7 +4,8 @@ require 'stringio'
 
 describe Ding::BufIo do
     before :each do
-        sio = StringIO.new('abcd' * 8)
+        @s = 'abcd' * 8
+        sio = StringIO.new(@s)
         @bufio = Ding::BufIo.new(sio)
     end
 
@@ -29,13 +30,33 @@ describe Ding::BufIo do
         @bufio.read(3).should == 'bcd'
     end
 
-    it "should be able to peek chars before the buffer boundary"
+    it "should be able to peek chars before the buffer boundary" do
+        @bufio.read(12)
+        @bufio.peek(4).should == 'abcd'
+    end
 
-    it "should be able to peek chars after the buffer boundary"
+    it "should be able to peek chars after the buffer boundary" do
+        @bufio.read(16)
+        @bufio.peek(4).should == 'abcd'
+    end
 
-    it "should be able to peek chars across the buffer boundary"
+    (0..15).each do | off |
+        len = (16 - off) * 2
+        it "should be able to peek #{len} chars across the buffer boundary" do
+            @bufio.read(off)
+            @bufio.peek(len).should == @s[off,len]
+            @bufio.peek(len).should == @s[off,len]
+        end
+    end
 
-    it "should be able to read across the buffer boundary"
+    (0..15).each do | off |
+        len = (16 - off) * 2
+        it "should be able to read #{len} chars across the buffer boundary" do
+            @bufio.read(off)
+            @bufio.read(len).should == @s[off,len]
+            @bufio.read(1).should   == @s[off+len,1]
+        end
+    end
 
     it "should flag that it is at the end of the stream"
 end
