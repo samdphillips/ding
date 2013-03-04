@@ -7,7 +7,7 @@ module Ding
             @pat = Regexp.new(rx)
         end
 
-        def contains(char)
+        def contains?(char)
             not @pat.match(char).nil?
         end
 

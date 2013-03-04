@@ -8,7 +8,7 @@ class Contain
 
     def matches?(charset)
         @charset = charset
-        @charset.contains(@char)
+        @charset.contains?(@char)
     end
 
     def description
