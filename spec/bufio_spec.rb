@@ -40,24 +40,34 @@ describe Ding::BufIo do
         @bufio.peek(4).should == 'abcd'
     end
 
-    (0..15).each do | off |
-        len = (16 - off) * 2
+    (0..15).each do | skip |
+        len = (16 - skip) * 2
         it "should be able to peek #{len} chars across the buffer boundary" do
-            @bufio.read(off)
-            @bufio.peek(len).should == @s[off,len]
-            @bufio.peek(len).should == @s[off,len]
+            @bufio.read(skip)
+            @bufio.peek(len).should == @s[skip,len]
+            @bufio.peek(len).should == @s[skip,len]
         end
     end
 
-    (0..15).each do | off |
-        len = (16 - off) * 2
+    (0..15).each do | skip |
+        len = (16 - skip) * 2
         it "should be able to read #{len} chars across the buffer boundary" do
-            @bufio.read(off)
-            @bufio.read(len).should == @s[off,len]
-            @bufio.read(1).should   == @s[off+len,1]
+            @bufio.read(skip)
+            @bufio.read(len).should == @s[skip,len]
+            @bufio.read(1).should   == @s[skip+len,1]
         end
     end
 
-    it "should flag that it is at the end of the stream"
+    [0, 8, 16, 24].each do | skip |
+        it "should not flag end of the stream after reading #{skip} chars" do
+            @bufio.read(skip)
+            @bufio.should_not be_at_end
+        end
+    end
+
+    it "should flag that it is at the end of the stream after reading all chars" do
+        @bufio.read(32)
+        @bufio.should be_at_end
+    end
 end
 

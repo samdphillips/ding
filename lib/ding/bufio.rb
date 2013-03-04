@@ -49,6 +49,10 @@ module Ding
             s
         end
 
+        def at_end?
+            read_peek(1, false) == ''
+        end
+
         def read_peek(count, commit)
             fill(count)
             cleanup
