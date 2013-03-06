@@ -110,5 +110,15 @@ describe Ding::Reader do
         r.should read_eof
     end
 
+    it "should read a series of ids ' a = b + c '" do
+        r = setup_reader(' a = b + c ')
+        r.should read_id('a')
+        r.should read_id('=')
+        r.should read_id('b')
+        r.should read_id('+')
+        r.should read_id('c')
+        r.should read_eof
+    end
+
 end
 

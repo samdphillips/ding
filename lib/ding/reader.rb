@@ -69,7 +69,7 @@ module Ding
 
         Space = Charset.new(/\s/)
         Digit = Charset.new(/\d/)
-        IdStart = Charset.new(/[a-zA-Z_\+\-]/)
+        IdStart = Charset.new(/[a-zA-Z_\+\-=]/)
         IdChar = IdStart + Digit
 
         def skip_spaces
