@@ -30,6 +30,10 @@ module Ding
         def id_term?
             false
         end
+
+        def delimit_term?
+            false
+        end
     end
 
     class IdTerm < Term
@@ -40,6 +44,18 @@ module Ding
         end
 
         def id_term?
+            true
+        end
+    end
+
+    class DelimitTerm < Term
+        attr_reader :name
+
+        def initialize(name)
+            @name = name
+        end
+
+        def delimit_term?
             true
         end
     end
@@ -71,6 +87,7 @@ module Ding
         Digit = Charset.new(/\d/)
         IdStart = Charset.new(/[a-zA-Z_\+\-=]/)
         IdChar = IdStart + Digit
+        Delimiter = Charset.from_chars(',.;')
 
         def skip_spaces
             while true do
@@ -152,6 +169,8 @@ module Ding
 
             if IdStart.contains?(c) then
                 read_id_term
+            elsif Delimiter.contains?(c) then
+                DelimitTerm.new(@io.read(1))
             else
                 raise ReaderError.new('term', c)
             end

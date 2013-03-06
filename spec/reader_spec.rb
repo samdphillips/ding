@@ -40,6 +40,12 @@ def read_eof
     end
 end
 
+def read_delimiter(name)
+    ReadExpectation.new('DelimitTerm', name) do | term |
+        term.delimit_term? and term.name == name
+    end
+end
+
 describe Ding::Reader do
     it "should skip whitespace" do
         r = setup_reader('    ')
@@ -119,6 +125,38 @@ describe Ding::Reader do
         r.should read_id('c')
         r.should read_eof
     end
+
+    it "should read a delimited term ' a,b '" do
+        r = setup_reader(' a,b ')
+        r.should read_id('a')
+        r.should read_delimiter(',')
+        r.should read_id('b')
+        r.should read_eof
+    end
+
+    it "should read a delimited term ' a;b '" do
+        r = setup_reader(' a;b ')
+        r.should read_id('a')
+        r.should read_delimiter(';')
+        r.should read_id('b')
+        r.should read_eof
+    end
+
+    it "should read a delimited term ' foo.bar.baz '" do
+        r = setup_reader(' foo.bar.baz ')
+        r.should read_id('foo')
+        r.should read_delimiter('.')
+        r.should read_id('bar')
+        r.should read_delimiter('.')
+        r.should read_id('baz')
+        r.should read_eof
+    end
+
+    it "should read a compound term ' (a + b) '"
+    it "should read a compound term ' (a, b, c) '"
+    it "should read a compound term ' [a + b] '"
+    it "should read a compound term ' [a, b, c] '"
+    it "should read a compound term ' {a + b} '"
 
 end
 
