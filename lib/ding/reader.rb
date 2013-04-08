@@ -31,6 +31,10 @@ module Ding
             false
         end
 
+        def compound_term?
+            false
+        end
+
         def delimit_term?
             false
         end
@@ -56,6 +60,19 @@ module Ding
         end
 
         def delimit_term?
+            true
+        end
+    end
+
+    class CompoundTerm < Term
+        attr_reader :shape, :terms
+
+        def initialize(shape, terms)
+            @shape = shape
+            @terms = terms
+        end
+
+        def compound_term?
             true
         end
     end
@@ -88,6 +105,11 @@ module Ding
         IdStart = Charset.new(/[a-zA-Z_\+\-=]/)
         IdChar = IdStart + Digit
         Delimiter = Charset.from_chars(',.;')
+        OpenBracket = Charset.from_chars('([{')
+
+        Brackets = { '(' => [')', :paren],
+                     '[' => [']', :square],
+                     '{' => ['}', :curly]   }
 
         def skip_spaces
             while true do
@@ -158,6 +180,22 @@ module Ding
             IdTerm.new(s)
         end
 
+        def read_compound_term
+            terms = []
+            c = @io.read(1)
+
+            closer, shape = Brackets[c]
+
+            while c != closer do
+                terms << next_term
+                c = @io.peek(1)
+            end
+
+            @io.read(1)
+
+            CompoundTerm.new(shape, terms)
+        end
+
         def next_term
             skip_spaces
 
@@ -171,6 +209,8 @@ module Ding
                 read_id_term
             elsif Delimiter.contains?(c) then
                 DelimitTerm.new(@io.read(1))
+            elsif OpenBracket.contains?(c) then
+                read_compound_term
             else
                 raise ReaderError.new('term', c)
             end

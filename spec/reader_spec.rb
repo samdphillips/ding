@@ -28,6 +28,51 @@ class ReadExpectation
     end
 end
 
+class CompoundReadExpectation
+    class TermArrayReader
+        def initialize(terms)
+            @terms = terms
+            @pos   = 0
+        end
+
+        def next_term
+            if @pos == @terms.size then
+                Ding::EofTerm.instance
+            else
+                i = @pos
+                @pos += 1
+                @terms[i]
+            end
+        end
+    end
+
+    def initialize(shape, &submatch)
+        @shape = shape
+        @submatch = submatch
+    end
+
+    def matches?(reader)
+        @subject = reader.next_term
+        @subject.compound_term? and shape_matches? and terms_match?
+    end
+
+    def shape_matches?
+        @shape == @subject.shape
+    end
+
+    def terms_match?
+        @submatch.call(TermArrayReader.new(@subject.terms))
+    end
+
+    def failure_message
+        "#{@subject} did not match CompoundTerm with shape #{@shape}"
+    end
+
+    def negative_failure_message
+        "#{@subject} should not match CompoundTerm with shape #{@shape}"
+    end
+end
+
 def read_id(name)
     ReadExpectation.new('IdTerm', name) do | term |
         term.id_term? and term.name == name
@@ -44,6 +89,10 @@ def read_delimiter(name)
     ReadExpectation.new('DelimitTerm', name) do | term |
         term.delimit_term? and term.name == name
     end
+end
+
+def read_compound(shape, &submatch)
+    CompoundReadExpectation.new(shape, &submatch)
 end
 
 describe Ding::Reader do
@@ -116,6 +165,12 @@ describe Ding::Reader do
         r.should read_eof
     end
 
+    it "should read a single id ' a-b '" do
+        r = setup_reader(' a-b ')
+        r.should read_id('a-b')
+        r.should read_eof
+    end
+
     it "should read a series of ids ' a = b + c '" do
         r = setup_reader(' a = b + c ')
         r.should read_id('a')
@@ -152,11 +207,64 @@ describe Ding::Reader do
         r.should read_eof
     end
 
-    it "should read a compound term ' (a + b) '"
-    it "should read a compound term ' (a, b, c) '"
-    it "should read a compound term ' [a + b] '"
-    it "should read a compound term ' [a, b, c] '"
-    it "should read a compound term ' {a + b} '"
+    it "should read a compound term ' (a + b) '" do
+        r = setup_reader(' (a + b) ')
+        r.should read_compound(:paren) { |t|
+            t.should read_id('a')
+            t.should read_id('+')
+            t.should read_id('b')
+            t.should read_eof
+        }
+        r.should read_eof
+    end
+
+    it "should read a compound term ' (a, b, c) '" do
+        r = setup_reader(' (a, b, c) ')
+        r.should read_compound(:paren) { |t|
+            t.should read_id('a')
+            t.should read_delimiter(',')
+            t.should read_id('b')
+            t.should read_delimiter(',')
+            t.should read_id('c')
+            t.should read_eof
+        }
+        r.should read_eof
+    end
+
+    it "should read a compound term ' [a + b] '" do
+        r = setup_reader(' [a + b] ')
+        r.should read_compound(:square) { |t|
+            t.should read_id('a')
+            t.should read_id('+')
+            t.should read_id('b')
+            t.should read_eof
+        }
+        r.should read_eof
+    end
+
+    it "should read a compound term ' [a, b, c] '" do
+        r = setup_reader(' [a, b, c] ')
+        r.should read_compound(:square) { |t|
+            t.should read_id('a')
+            t.should read_delimiter(',')
+            t.should read_id('b')
+            t.should read_delimiter(',')
+            t.should read_id('c')
+            t.should read_eof
+        }
+        r.should read_eof
+    end
+
+    it "should read a compound term ' {a + b} '" do
+        r = setup_reader(' {a + b} ')
+        r.should read_compound(:curly) { |t|
+            t.should read_id('a')
+            t.should read_id('+')
+            t.should read_id('b')
+            t.should read_eof
+        }
+        r.should read_eof
+    end
 
 end
 
