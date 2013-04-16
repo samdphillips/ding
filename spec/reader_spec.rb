@@ -266,5 +266,10 @@ describe Ding::Reader do
         r.should read_eof
     end
 
+    it "should raise a reader error on unterminated compound term" do
+        r = setup_reader(' { a ')
+        expect { r.next_term }.to raise_error(Ding::ReaderError)
+    end
+
 end
 

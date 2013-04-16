@@ -136,7 +136,11 @@ module Ding
             closer, shape = Brackets[c]
 
             while c != closer do
-                terms << next_term
+                t = next_term
+                if t.eof_term? then
+                    raise ReaderError.new(closer, '<eof>')
+                end
+                terms << t
                 c = @io.peek(1)
             end
 
