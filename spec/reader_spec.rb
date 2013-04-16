@@ -37,7 +37,7 @@ class CompoundReadExpectation
 
         def next_term
             if @pos == @terms.size then
-                Ding::EofTerm.instance
+                Ding::Terms::EofTerm.instance
             else
                 i = @pos
                 @pos += 1
