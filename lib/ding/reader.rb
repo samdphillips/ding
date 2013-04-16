@@ -1,4 +1,6 @@
 
+require 'stringio'
+
 module Ding
     class Charset
         attr_reader :pat
@@ -34,8 +36,13 @@ module Ding
     class Reader
         include Ding::Terms
 
+        def self.from_string(s)
+            self.new(BufIo.new(StringIO.new(s)))
+        end
+
         def initialize(io)
             @io = io
+            @at_end = io.at_end?
         end
 
         Space = Charset.new(/\s/)
@@ -48,6 +55,10 @@ module Ding
         Brackets = { '(' => [')', :paren],
                      '[' => [']', :square],
                      '{' => ['}', :curly]   }
+
+        def at_end?
+            @at_end
+        end
 
         def skip_spaces
             while true do
@@ -138,6 +149,7 @@ module Ding
             skip_spaces
 
             if @io.at_end? then
+                @at_end = true
                 return EofTerm.instance
             end
 
