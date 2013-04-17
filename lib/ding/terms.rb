@@ -66,6 +66,49 @@ module Ding
             end
         end
 
+        class OutOfBounds < StandardError
+            def initialize(index, term_buffer)
+                @index = index
+                @term_buffer = term_buffer
+            end
+        end
+
+        class TermBuffer
+            def initialize(buffer, stream)
+                @buffer = buffer
+                @stream = stream
+            end
+
+            def at_end?
+                @stream.at_end?
+            end
+
+            def [](index)
+                unless index < @buffer.size then
+                    amount = index + 1
+                    while @buffer.size < amount do
+                        @buffer << @stream.next_term
+                        if @stream.at_end? then
+                            raise OutOfBounds.new(index, self)
+                        end
+                    end
+                end
+                @buffer[index]
+            end
+        end
+
+        class EmptyTermStream
+            include Singleton
+
+            def at_end?
+                true
+            end
+
+            def next_term
+                EofTerm.instance
+            end
+        end
+
     end
 end
 
