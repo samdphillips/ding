@@ -83,6 +83,10 @@ module Ding
                 @stream.at_end?
             end
 
+            def in_range?(i)
+                i < @buffer.size
+            end
+
             def [](index)
                 unless index < @buffer.size then
                     amount = index + 1
@@ -106,6 +110,32 @@ module Ding
 
             def next_term
                 EofTerm.instance
+            end
+        end
+
+        class TermSequenceEmpty < StandardError
+        end
+        
+        class TermSequence
+            def initialize(offset, buffer)
+                @offset = offset
+                @buffer = buffer
+            end
+
+            def empty?
+                @buffer.at_end? and not @buffer.in_range?(@offset)
+            end
+
+            def first
+                @buffer[@offset]
+            end
+
+            def rest
+                if empty? then
+                    raise TermSequenceEmpty.new
+                end
+
+                self.class.new(@offset + 1, @buffer)
             end
         end
 
