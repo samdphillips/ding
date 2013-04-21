@@ -113,8 +113,7 @@ module Ding
             end
         end
 
-        class TermSequenceEmpty < StandardError
-        end
+        class TermSequenceEmpty < StandardError; end
         
         class TermSequence
             def initialize(offset, buffer)

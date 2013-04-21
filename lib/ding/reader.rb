@@ -56,6 +56,10 @@ module Ding
                      '[' => [']', :square],
                      '{' => ['}', :curly]   }
 
+        def as_term_sequence
+            TermSequence.new(0, TermBuffer.new([], self))
+        end
+
         def at_end?
             @at_end
         end
