@@ -66,75 +66,113 @@ module Ding
             end
         end
 
-        class OutOfBounds < StandardError
-            def initialize(index, term_buffer)
-                @index = index
-                @term_buffer = term_buffer
-            end
-        end
-
-        class TermBuffer
-            def initialize(buffer, stream)
-                @buffer = buffer
-                @stream = stream
-            end
-
-            def at_end?
-                @stream.at_end?
-            end
-
-            def in_range?(i)
-                i < @buffer.size
-            end
-
-            def [](index)
-                unless index < @buffer.size then
-                    amount = index + 1
-                    while @buffer.size < amount do
-                        @buffer << @stream.next_term
-                        if @stream.at_end? then
-                            raise OutOfBounds.new(index, self)
-                        end
-                    end
-                end
-                @buffer[index]
-            end
-        end
-
-        class EmptyTermStream
-            include Singleton
-
-            def at_end?
-                true
-            end
-
-            def next_term
-                EofTerm.instance
-            end
-        end
-
         class TermSequenceEmpty < StandardError; end
         
         class TermSequence
-            def initialize(offset, buffer)
-                @offset = offset
-                @buffer = buffer
+            class Empty
+                include Singleton
+
+                def empty?
+                    true
+                end
+
+                def first
+                    raise TermSequenceEmpty
+                end
+                
+                def rest
+                    raise TermSequenceEmpty
+                end
+
+                def new_state=(seq)
+                end
+            end
+
+            class Pending
+                attr_writer :new_state
+
+                def initialize(st)
+                    @st = st
+                end
+
+                def step
+                    elem = @st.next_term
+                    if elem.eof_term? then
+                        state = Empty.instance
+                    else
+                        rest = TermSequence.for_stream(@st)
+                        state = Complete.new(elem, rest)
+                    end
+                    @new_state.call(state)
+                end
+
+                def empty?
+                    step.empty?
+                end
+
+                def first
+                    step.first
+                end
+
+                def rest
+                    step.rest
+                end
+            end
+
+            class Complete
+                attr_reader :first, :rest
+
+                def initialize(first, rest)
+                    @first = first
+                    @rest = rest
+                end
+
+                def empty?
+                    false
+                end
+
+                def new_state=(st)
+                end
+            end
+
+            def self.from_array(arr)
+                arr.reverse.reduce(empty_state) do |seq, term|
+                    self.cons(term, seq)
+                end
+            end
+
+            def self.from_string(str)
+                r = Reader.from_string(str)
+                self.for_stream(r)
+            end
+
+            def self.for_stream(st)
+                self.new(Pending.new(st))
+            end
+
+            def self.cons(first, rest)
+                self.new(Complete.new(first, rest))
+            end
+
+            def self.empty_state
+                self.new(Empty.instance)
+            end
+
+            def initialize(state)
+                @state = state
+                @state.new_state = lambda {|st| @state = st }
             end
 
             def empty?
-                @buffer.at_end? and not @buffer.in_range?(@offset)
+                @state.empty?
             end
 
             def first
-                @buffer[@offset]
+                @state.first
             end
 
             def rest
-                if empty? then
-                    raise TermSequenceEmpty.new
-                end
-
-                self.class.new(@offset + 1, @buffer)
+                @state.rest
             end
         end
 

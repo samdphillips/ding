@@ -57,7 +57,7 @@ module Ding
                      '{' => ['}', :curly]   }
 
         def as_term_sequence
-            TermSequence.new(0, TermBuffer.new([], self))
+            TermSequence.for_stream(self)
         end
 
         def at_end?
