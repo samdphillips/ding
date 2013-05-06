@@ -135,9 +135,9 @@ module Ding
 
         def read_compound_term
             terms = []
-            c = @io.read(1)
-
-            closer, shape = Brackets[c]
+            closer, shape = Brackets[@io.read(1)]
+            skip_spaces
+            c = @io.peek(1)
 
             while c != closer do
                 t = next_term

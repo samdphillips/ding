@@ -271,5 +271,13 @@ describe Ding::Reader do
         expect { r.next_term }.to raise_error(Ding::ReaderError)
     end
 
+    it "should read an empty compound term" do
+        r = setup_reader('{ }')
+        r.should read_compound(:curly) { |t|
+            t.should read_eof
+        }
+        r.should read_eof
+    end
+
 end
 
