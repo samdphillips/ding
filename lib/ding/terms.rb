@@ -57,6 +57,10 @@ module Ding
             def compound_term?
                 true
             end
+
+            def as_term_sequence
+                TermSequence.from_array(@terms)
+            end
         end
 
         class EofTerm < Term

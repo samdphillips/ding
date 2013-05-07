@@ -65,6 +65,7 @@ module Ding
                     @name = name
                 end
 
+                # XXX: move to super
                 def link(pattern)
                     self.class.new(pattern, @bind_name, @name)
                 end
@@ -77,6 +78,37 @@ module Ding
                     end
                 end
 
+                # XXX: move to super
+                def match(seq)
+                    if seq.empty? then
+                        FailMatch.instance
+                    elsif matches?(seq.first) then
+                        m = @next_pattern.match(seq.rest)
+                        m.merge(seq.first, @bind_name)
+                    else
+                        FailMatch.instance
+                    end
+                end
+            end
+
+            class CompoundPattern
+                def initialize(next_pattern, shape, subpattern)
+                    @next_pattern = next_pattern
+                    @shape = shape
+                    @subpattern = subpattern
+                end
+
+                def matches?(term)
+                    term.compound_term? and term.shape == @shape and
+                        @subpattern.match(term.as_term_sequence)
+                end
+
+                # XXX: move to super
+                def link(pattern)
+                    self.class.new(pattern, @shape, @subpattern)
+                end
+
+                # XXX: move to super
                 def match(seq)
                     if seq.empty? then
                         FailMatch.instance
@@ -123,6 +155,15 @@ module Ding
 
                 def bind_id(bind_name)
                     match_pattern(IdPattern.new(nil, bind_name, nil))
+                end
+
+                def term_block(&build)
+                    term_compound(:curly, &build)
+                end
+
+                def term_compound(shape, &build)
+                    subpat = self.class.build(&build)
+                    match_pattern(CompoundPattern.new(nil, shape, subpat))
                 end
             end
         end

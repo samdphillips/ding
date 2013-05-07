@@ -87,5 +87,22 @@ describe Ding::Terms::Patterns::Builder do
         match.binding[:classname].name.should eql('A')
     end
 
+    it "should match a pattern built from other patterns"
+
+    it "should match a pattern with an empty block" do
+        pat = described_class.build do
+            term_id('class')
+            bind_id(:classname)
+            term_block do
+            end
+        end
+
+        seq = make_sequence("class A { }")
+        match = pat.match(seq)
+
+        match.should be_success
+        match.rest.should be_empty
+    end
+
 end
 
