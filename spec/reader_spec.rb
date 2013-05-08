@@ -279,5 +279,14 @@ describe Ding::Reader do
         r.should read_eof
     end
 
+    it "should read an compound term with spaces before closing brace" do
+        r = setup_reader('{B }')
+        r.should read_compound(:curly) { |t|
+            t.should read_id('B')
+            t.should read_eof
+        }
+        r.should read_eof
+    end
+
 end
 

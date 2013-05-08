@@ -145,6 +145,7 @@ module Ding
                     raise ReaderError.new(closer, '<eof>')
                 end
                 terms << t
+                skip_spaces
                 c = @io.peek(1)
             end
 
