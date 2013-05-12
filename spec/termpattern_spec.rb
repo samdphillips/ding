@@ -84,7 +84,7 @@ describe Ding::Terms::Patterns::Builder do
         match = pat.match(seq)
 
         match.should be_success
-        match.binding[:classname].name.should eql('A')
+        match.bindings[:classname].name.should eql('A')
     end
 
     it "should match a pattern built from other patterns"
@@ -102,6 +102,24 @@ describe Ding::Terms::Patterns::Builder do
 
         match.should be_success
         match.rest.should be_empty
+    end
+
+    it "should match a pattern with a binding in a block" do
+        pat = described_class.build do
+            term_id('class')
+            bind_id(:classname)
+            term_block do
+                bind_id(:inside)
+            end
+        end
+
+        seq = make_sequence("class A { B }")
+        match = pat.match(seq)
+
+        match.should be_success
+        match.rest.should be_empty
+        match.bindings[:classname].name.should eql('A')
+        match.bindings[:inside].name.should eql('B')
     end
 
 end
