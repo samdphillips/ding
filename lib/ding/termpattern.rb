@@ -46,6 +46,10 @@ module Ding
             class Match
                 attr_reader :rest
 
+                def self.fail
+                    FailMatch.instance
+                end
+
                 def initialize(rest, bindings)
                     @rest = rest
                     @bindings = bindings
@@ -80,11 +84,11 @@ module Ding
 
                 def match(seq, bindings=PBinding.empty)
                     if seq.empty? then
-                        FailMatch.instance
+                        Match.fail
                     elsif matches?(seq.first) then
                         Match.new(seq.rest, bindings.add(@bind_name, seq.first))
                     else
-                        FailMatch.instance
+                        Match.fail
                     end
                 end
             end
@@ -102,16 +106,16 @@ module Ding
 
                 def match(seq, bindings=PBinding.empty)
                     if seq.empty? then
-                        FailMatch.instance
+                        Match.fail
                     elsif matches_shape?(seq.first) then
                         m = @subpattern.match(seq.first.as_term_sequence, bindings)
                         if m.success? then
                             Match.new(seq.rest, m.bindings)
                         else
-                            FailMatch.instance
+                            Match.fail
                         end
                     else
-                        FailMatch.instance
+                        Match.fail
                     end
                 end
             end
