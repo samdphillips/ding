@@ -5,14 +5,20 @@ module Ding
     module Terms
         module Patterns
             class PBinding
+                class NoSuchValue
+                    include Singleton
+                end
+
                 class Empty < PBinding
                     include Singleton
 
-                    def initialize
-                    end
+                    def initialize; end
 
-                    def [](name)
-                        raise "#{name} is not bound"
+                    def get(name, default=NoSuchValue.instance)
+                        if default == NoSuchValue.instance then
+                            raise "#{name} is not bound"
+                        end
+                        default
                     end
                 end
 
@@ -35,10 +41,14 @@ module Ding
                 end
 
                 def [](name)
+                    get(name)
+                end
+
+                def get(name, default=NoSuchValue.instance)
                     if name == @name then
                         @term
                     else
-                        @prev[name]
+                        @prev.get(name, default)
                     end
                 end
             end
