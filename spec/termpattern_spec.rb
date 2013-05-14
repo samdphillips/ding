@@ -142,5 +142,23 @@ describe Ding::Terms::Patterns::Builder do
         match.bindings[:inside].name.should eql('B')
     end
 
+    it "should match a repeated pattern" do
+        pat = described_class.build do
+            repeatedly do
+                bind_id(:type)
+                bind_id(:varname)
+                term_delimit(';')
+            end
+        end
+
+        seq = make_sequence('String s; Integer i; Float f;')
+        match = pat.match(seq)
+        match.should be_success
+        match.rest.should be_empty
+
+        match.bindings[:type].collect {|x| x.name }.should eql(['String', 'Integer', 'Float'])
+        match.bindings[:varname].collect {|x| x.name }.should eql(['s', 'i', 'f'])
+    end
+
 end
 

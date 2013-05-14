@@ -26,6 +26,8 @@ module Ding
                     Empty.instance
                 end
 
+                attr_reader :prev, :name, :term
+
                 def initialize(prev, name, term)
                     @prev = prev
                     @name = name
@@ -49,6 +51,22 @@ module Ding
                         @term
                     else
                         @prev.get(name, default)
+                    end
+                end
+            end
+
+            class Barrier 
+                attr_reader :prev
+
+                def initialize(prev)
+                    @prev = prev
+                end
+
+                def add(name, term)
+                    if name.nil? then
+                        self
+                    else
+                        PBinding.new(self, name, term)
                     end
                 end
             end
@@ -103,6 +121,26 @@ module Ding
                 end
             end
 
+            class DelimitPattern
+                def initialize(name)
+                    @name = name
+                end
+
+                def matches?(term)
+                    term.delimit_term? and @name = term.name
+                end
+
+                def match(seq, bindings=PBinding.empty)
+                    if seq.empty? then
+                        Match.fail
+                    elsif matches?(seq.first) then
+                        Match.new(seq.rest, bindings)
+                    else
+                        Match.fail
+                    end
+                end
+            end
+
             class CompoundPattern
                 def initialize(next_pattern, shape, subpattern)
                     @next_pattern = next_pattern
@@ -150,6 +188,44 @@ module Ding
                 end
             end
 
+            class RepeatedPattern
+                def initialize(subpattern)
+                    @subpattern = subpattern
+                end
+
+                def merge_bindings(barrier, bindings)
+                    b = {}
+                    while bindings != barrier do
+                        name = bindings.name
+                        v = b.fetch(name, [])
+                        v.insert(0, bindings.term)
+                        b[name] = v
+                        bindings = bindings.prev
+                    end
+
+                    bindings = bindings.prev
+                    b.each do |k,v|
+                        bindings = bindings.add(k,v)
+                    end
+                    bindings
+                end
+
+                def match(seq, bindings=PBinding.empty)
+                    bindings = barrier = Barrier.new(bindings)
+                    while true do
+                        m = @subpattern.match(seq, bindings)
+                        if m.success? then
+                            seq = m.rest
+                            bindings = m.bindings
+                        else
+                            break
+                        end
+                    end
+
+                    Match.new(seq, merge_bindings(barrier, bindings))
+                end
+            end
+
             class Builder
                 def self.build(&block)
                     builder = self.new
@@ -185,6 +261,10 @@ module Ding
                     match_pattern(IdPattern.new(bind_name, nil))
                 end
 
+                def term_delimit(name)
+                    match_pattern(DelimitPattern.new(name))
+                end
+
                 def term_block(&build)
                     term_compound(:curly, &build)
                 end
@@ -192,6 +272,11 @@ module Ding
                 def term_compound(shape, &build)
                     subpat = build_pattern(&build)
                     match_pattern(CompoundPattern.new(nil, shape, subpat))
+                end
+
+                def repeatedly(&build)
+                    subpat = build_pattern(&build)
+                    match_pattern(RepeatedPattern.new(subpat))
                 end
             end
         end
