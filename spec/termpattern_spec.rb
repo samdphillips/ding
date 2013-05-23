@@ -5,7 +5,7 @@ def make_sequence(s)
     Ding::Reader.from_string(s).as_term_sequence
 end
 
-describe Ding::Terms::Patterns::Builder do
+describe Ding::Terms::Patterns::PatternBuilder do
     it "should match nothing with an empty pattern" do
         pat = described_class.build do 
         end

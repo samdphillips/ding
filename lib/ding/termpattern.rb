@@ -226,7 +226,7 @@ module Ding
                 end
             end
 
-            class Builder
+            class PatternBuilder
                 def self.build(&block)
                     builder = self.new
                     builder.build(&block)
