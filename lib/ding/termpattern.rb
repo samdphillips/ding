@@ -55,22 +55,6 @@ module Ding
                 end
             end
 
-            class Barrier 
-                attr_reader :prev
-
-                def initialize(prev)
-                    @prev = prev
-                end
-
-                def add(name, term)
-                    if name.nil? then
-                        self
-                    else
-                        PBinding.new(self, name, term)
-                    end
-                end
-            end
-
             class Match
                 attr_reader :rest
 
@@ -189,6 +173,22 @@ module Ding
             end
 
             class RepeatedPattern
+                class Barrier 
+                    attr_reader :prev
+
+                    def initialize(prev)
+                        @prev = prev
+                    end
+
+                    def add(name, term)
+                        if name.nil? then
+                            self
+                        else
+                            PBinding.new(self, name, term)
+                        end
+                    end
+                end
+
                 def initialize(subpattern)
                     @subpattern = subpattern
                 end
