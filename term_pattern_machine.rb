@@ -112,11 +112,15 @@ class Matcher
 
 end
 
+def test1
+    p5 = MatchProperty.new(nil) { |term| term.compound_term? }
+    p4 = AdvSequence.new(p5)
+    p3 = BindTerm.new(p4, :classname)
+    p2 = MatchProperty.new(p3) { |term| term.id_term? }
+    p1 = AdvSequence.new(p2)
+    p0 = MatchProperty.new(p1) { |term| term.id_term? and term.name == 'class' }
+    m = Matcher.new(p0, TermSequence.from_string('class A { }'))
+    m.match
+    pp m
+end
 
-p3 = BindTerm.new(nil, :classname)
-p2 = MatchProperty.new(p3) { |term| term.id_term? }
-p1 = AdvSequence.new(p2)
-p0 = MatchProperty.new(p1) { |term| term.id_term? and term.name == 'class' }
-m = Matcher.new(p0, TermSequence.from_string('class A { }'))
-m.match
-pp m
