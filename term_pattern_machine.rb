@@ -1,5 +1,7 @@
 
 require 'pp'
+require 'singleton'
+
 require 'ding'
 include Ding::Terms
 
@@ -8,6 +10,13 @@ class Operator
 
     def initialize(next_op)
         @next_op = next_op
+    end
+end
+
+class AdvSequence < Operator
+    def step(m)
+        m.step_seq
+        m.next_op
     end
 end
 
@@ -34,6 +43,29 @@ class BindTerm < Operator
 
     def step(m)
         m.bind(@bind_name)
+        m.next_op
+    end
+end
+
+class PatBinds
+    class Empty < PatBinds
+        include Singleton
+
+        def initialize; end
+    end
+
+    def initialize(prev, name, term)
+        @prev = prev
+        @name = name
+        @term = term
+    end
+
+    def self.empty
+        Empty.instance
+    end
+
+    def bind(name, term)
+        PatBinds.new(self, name, term)
     end
 end
 
@@ -43,7 +75,7 @@ class Matcher
     def initialize(pat, seq)
         @pat    = pat
         @seq    = seq
-        @bind   = {}
+        @binds  = PatBinds.empty
         @fail   = []
         @bstack = []
     end
@@ -56,10 +88,6 @@ class Matcher
         @pat.step(self)
     end
 
-    def next_op
-        @pat = @pat.next_op
-    end
-
     def match
         while running? do
             step
@@ -69,13 +97,26 @@ class Matcher
     def running?
         not @pat.nil?
     end
+
+    def step_seq
+        @seq = @seq.rest
+    end
+
+    def next_op
+        @pat = @pat.next_op
+    end
+
+    def bind(name)
+        @binds = @binds.bind(name, seq.first)
+    end
+
 end
 
 
 p3 = BindTerm.new(nil, :classname)
 p2 = MatchProperty.new(p3) { |term| term.id_term? }
 p1 = AdvSequence.new(p2)
-p0 = MatchProperty.new(p1) { |term| term.id_term? and term.name == :class }
-m = Matcher.new(pat, TermSequence.from_string('class A { }'))
+p0 = MatchProperty.new(p1) { |term| term.id_term? and term.name == 'class' }
+m = Matcher.new(p0, TermSequence.from_string('class A { }'))
 m.match
 pp m
